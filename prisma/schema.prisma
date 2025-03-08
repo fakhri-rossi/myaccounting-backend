@@ -12,3 +12,92 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+enum Role{
+  Admin
+  User
+}
+
+enum AccountType{
+  Asset
+  Liability
+  Equity
+  Revenue
+  Expense
+}
+
+model User{
+  id String @id
+  email String @unique
+  name String
+  password String
+  role Role
+  deletedAt DateTime?
+  createdAccounts Account[] @relation(name: "accountCreatedBy")
+  updatedAccounts Account[] @relation(name: "accountUpdatedBy")
+  deletedAccounts Account[] @relation(name: "accountDeletedBy")
+  createdTransactions Transaction[] @relation(name: "transactionCreatedBy")
+  updatedTransactions Transaction[] @relation(name: "transactionUpdatedBy")
+  deletedTransactions Transaction[] @relation(name: "transactionDeletedBy")
+}
+
+model AccountSubtype{
+  id String @id
+  type AccountType
+  name String @unique
+  accounts Account[]
+}
+
+model Account{
+  id String @id
+  code String @unique
+  type AccountType
+  subtype AccountSubtype @relation(fields: [subtypeId], references: [id])
+  subtypeId String
+  name String @unique
+  accountBalances AccountBalance[]
+  transactions Transaction[]
+  description String?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  createdBy User @relation(name: "accountCreatedBy", fields: [createdById], references: [id])
+  createdById String
+  updatedAt DateTime?
+  updatedBy User? @relation(name: "accountUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+  deletedAt DateTime?
+  deletedBy User? @relation(name: "accountDeletedBy", fields: [deletedById], references: [id])
+  deletedById String?
+}
+
+model AccountBalance{
+  id String @id
+  period DateTime
+  account Account @relation(fields: [accountId], references: [id])
+  accountId String
+  openingBalance Int
+  totalDebit Int @db.UnsignedInt
+  totalCredit Int @db.UnsignedInt
+  closingBalance Int
+}
+
+model Transaction{
+  id String @id
+  date DateTime
+  account Account @relation(fields: [accountId], references: [id])
+  accountId String
+  referenceCode String
+  name String
+  description String?
+  debitAmount Int @db.UnsignedInt
+  creditAmount Int @db.UnsignedInt
+  createdAt DateTime @default(now())
+  createdBy User? @relation(name: "transactionCreatedBy", fields: [createdById], references: [id])
+  createdById String?
+  updatedAt DateTime?
+  updatedBy User? @relation(name: "transactionUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+  deletedAt DateTime?
+  deletedBy User? @relation(name: "transactionDeletedBy", fields: [deletedById], references: [id])
+  deletedById String?
+}
