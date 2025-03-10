@@ -1,7 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { LocalLoginDto } from './dto/local-login.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -10,7 +16,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string) {
+  async validateUser(dto: LocalLoginDto): Promise<Partial<User> | null> {
+    const { email, pass } = dto;
     const user = await this.usersService.findByEmail(email);
 
     if (!user) throw new NotFoundException('Email is not registered');
@@ -18,9 +25,9 @@ export class AuthService {
     if (await bcrypt.compare(pass, user.password)) {
       const { password, ...result } = user;
       return result;
+    } else {
+      throw new UnauthorizedException('Wrong password');
     }
-
-    return null;
   }
 
   async login(user: any) {
