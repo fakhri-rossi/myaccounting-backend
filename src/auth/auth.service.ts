@@ -4,16 +4,17 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LocalLoginDto } from './dto/local-login.dto';
 import { User } from '@prisma/client';
+import { BcryptService } from '../common/providers/bcrypt/bcrypt.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private bcryptService: BcryptService,
   ) {}
 
   async validateUser(dto: LocalLoginDto): Promise<Partial<User> | null> {
@@ -22,7 +23,7 @@ export class AuthService {
 
     if (!user) throw new NotFoundException('Email is not registered');
 
-    if (await bcrypt.compare(pass, user.password)) {
+    if (await this.bcryptService.compare(pass, user.password)) {
       const { password, ...result } = user;
       return result;
     } else {
