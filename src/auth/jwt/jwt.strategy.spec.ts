@@ -1,6 +1,5 @@
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { Strategy } from 'passport-jwt';
 import { JwtPayload } from 'src/common/interfaces/jwt-payload.interface';
 import { JwtStrategy } from './jwt.strategy';
 
